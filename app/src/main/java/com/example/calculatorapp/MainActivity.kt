@@ -74,7 +74,7 @@ fun MainScreen(funtions: Functions = Functions()) {
         // Calculator Layout
         val buttonSymbols = listOf(
             "AC", "()", "%", "/",
-            "1", "2", "3", "X",
+            "1", "2", "3", "*",
             "4", "5", "6", "-",
             "7", "8", "9", "+",
             "0", ".", "<", "="
@@ -102,7 +102,7 @@ fun KeyPadButtons(
             .size(buttonsSize / 3)
             .background(backgroundColor, RoundedCornerShape(buttonsSize))
             .clickable {
-                if (symbol in "1234567890.%/X-+") {
+                if (symbol in "1234567890.%/*-+") {
                     calculatorScreenText.value += symbol
                 }
                 if (symbol == "<"){

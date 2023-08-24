@@ -5,10 +5,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,6 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.text.isDigitsOnly
 import com.example.calculatorapp.ui.theme.CalculatorAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -50,20 +56,28 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(funtions: Functions = Functions()) {
-    val calculatorScreenText = rememberSaveable { mutableStateOf("") }
+fun MainScreen(functions: Functions = Functions()) {
+    val buttonsSeparation = 10.dp
+    val screenSize = 200.dp
+    val buttonsSize = 200.dp
+    val currentExpression = rememberSaveable { mutableStateOf("") }
+    val pastExpression = rememberSaveable { mutableStateOf("") }
     Column(
         modifier = Modifier
             .fillMaxSize(),
-        horizontalAlignment = CenterHorizontally
+        horizontalAlignment = CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(buttonsSeparation),
     ) {
-        val buttonsColor = MaterialTheme.colorScheme.primary
-        val buttonsSize = 200.dp
+        Spacer(modifier = Modifier.size(100.dp))
         TextField(
-            value = calculatorScreenText.value,
+            value = "${pastExpression.value}\n${currentExpression.value}",
             onValueChange = { newValue ->
-                calculatorScreenText.value = newValue
+                currentExpression.value = newValue
             },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(screenSize)
+                .padding(20.dp),
             maxLines = 2,
             readOnly = true,
             textStyle = TextStyle(
@@ -73,7 +87,8 @@ fun MainScreen(funtions: Functions = Functions()) {
         )
         // Calculator Layout
         val buttonSymbols = listOf(
-            "AC", "()", "%", "/",
+            "AC", "%","M-", "M+",
+            "√", "^", "()", "/",
             "1", "2", "3", "*",
             "4", "5", "6", "-",
             "7", "8", "9", "+",
@@ -81,9 +96,25 @@ fun MainScreen(funtions: Functions = Functions()) {
         )
         val rows = buttonSymbols.chunked(4)
         for (rowSymbols in rows) {
-            Row {
+            Row (
+                modifier = Modifier,
+            ) {
                 for (symbol in rowSymbols) {
-                    KeyPadButtons(symbol, buttonsColor, calculatorScreenText, buttonsSize,funtions)
+                   val buttonsColor = if (
+                        symbol.isDigitsOnly()||symbol == "."||symbol == "<"
+                    ){
+                       MaterialTheme.colorScheme.primary
+                    } else{
+                        MaterialTheme.colorScheme.tertiary
+                    }
+                    KeyPadButtons(symbol,
+                        buttonsColor,
+                        currentExpression,
+                        buttonsSize,
+                        functions,
+                        pastExpression
+                    )
+                    Spacer(modifier = Modifier.size(buttonsSeparation))
                 }
             }
         }
@@ -95,24 +126,34 @@ fun KeyPadButtons(
     backgroundColor: Color,
     calculatorScreenText: MutableState<String>,
     buttonsSize: Dp,
-    functions: Functions
-    ){
+    functions: Functions,
+    pastScreen: MutableState<String>
+){
     Box(
         modifier = Modifier
             .size(buttonsSize / 3)
             .background(backgroundColor, RoundedCornerShape(buttonsSize))
             .clickable {
-                if (symbol in "1234567890.%/*-+") {
+                if (symbol in "1234567890.") {
                     calculatorScreenText.value += symbol
                 }
-                if (symbol == "<"){
+                if (symbol in "%/*-+^√") {
+                    functions.signsHandling(symbol, calculatorScreenText)
+                }
+                if (symbol == "<") {
                     functions.backSpace(calculatorScreenText)
                 }
-                if (symbol == "="){
-                    functions.equal(calculatorScreenText)
+                if (symbol == "()") {
+                    functions.parenthesis(calculatorScreenText)
+                }
+                if (symbol == "=") {
+                    functions.equal(calculatorScreenText,pastScreen)
+                }
+                if (symbol == "AC") {
+                    calculatorScreenText.value = ""
                 }
             },
-        contentAlignment = Center
+        contentAlignment = Center,
     ) {
         Text(
             text = symbol,

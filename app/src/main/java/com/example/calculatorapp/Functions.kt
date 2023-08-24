@@ -23,17 +23,21 @@ class Functions {
     }
 
     private fun evaluateExpression(expression: MutableState<String>, operator: String) {
-        val operatorList = listOf<String>("+","-","*","/")
-        val rightSide = expression.value.substringAfterLast(operator)
-        val leftSide = expression.value.substringAfter(operator)
 
-        for (operators in operatorList){
-            val operan1 = leftSide.substringAfterLast(operators)
+        val input = expression.value
+        val validOperators = listOf('+','-')
+        val regexPatter = "[$validOperators]".toRegex()
+        val match = regexPatter.find(input)
+        if (match != null) {
+            val operator = match.range.start
+            val actualOperator = input.substring(0,operator)
+            val operator1 = input[operator]
+            val remainer = input.substring(operator + 1)
+            Log.d("eeeee",actualOperator)
+            Log.d("eeeeee",operator1.toString())
+            Log.d("eeeeeee",remainer)
         }
 
-
-        Log.d("Right",rightSide)
-        Log.d("left",leftSide)
 
 
 

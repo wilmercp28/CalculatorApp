@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment.Companion.Center
@@ -61,7 +62,7 @@ fun MainScreen(functions: Functions = Functions()) {
     val screenSize = 200.dp
     val buttonsSize = 200.dp
     val currentExpression = rememberSaveable { mutableStateOf("") }
-    val pastExpression = rememberSaveable { mutableStateOf("") }
+    val pastExpression: MutableList<String> by rememberSaveable { mutableStateOf(mutableListOf()) }
     Column(
         modifier = Modifier
             .fillMaxSize(),
@@ -70,7 +71,7 @@ fun MainScreen(functions: Functions = Functions()) {
     ) {
         Spacer(modifier = Modifier.size(100.dp))
         TextField(
-            value = "${pastExpression.value}\n${currentExpression.value}",
+            value = "${pastExpression.joinToString("")}\n${currentExpression.value}",
             onValueChange = { newValue ->
                 currentExpression.value = newValue
             },
@@ -78,11 +79,10 @@ fun MainScreen(functions: Functions = Functions()) {
                 .fillMaxWidth()
                 .height(screenSize)
                 .padding(20.dp),
-            maxLines = 2,
             readOnly = true,
             textStyle = TextStyle(
                 fontSize = 10.sp,
-                textAlign = TextAlign.End
+                textAlign = TextAlign.End,
             )
         )
         // Calculator Layout
@@ -127,7 +127,7 @@ fun KeyPadButtons(
     calculatorScreenText: MutableState<String>,
     buttonsSize: Dp,
     functions: Functions,
-    pastScreen: MutableState<String>
+    pastExpression: MutableList<String>
 ){
     Box(
         modifier = Modifier
@@ -147,7 +147,7 @@ fun KeyPadButtons(
                     functions.parenthesis(calculatorScreenText)
                 }
                 if (symbol == "=") {
-                    functions.equal(calculatorScreenText,pastScreen)
+                    functions.equal(calculatorScreenText,pastExpression)
                 }
                 if (symbol == "AC") {
                     calculatorScreenText.value = ""

@@ -11,7 +11,7 @@ class Functions {
     fun backSpace(
         text: MutableState<String>
     ) {
-        if (!text.value.isEmpty()) {
+        if (text.value.isNotEmpty()) {
             text.value = text.value.removeSuffix(text.value.last().toString())
         }
     }
@@ -39,24 +39,29 @@ class Functions {
         symbol: String,
         expression: MutableState<String>
     ){
-        val lastChar = expression.value.last().toString()
-        val validSymbols = setOf("%", "/", "*", "-", "+", "^", "√")
-        if (lastChar !in validSymbols){
-            expression.value += symbol
-        } else if (lastChar != symbol) {
-            expression.value = expression.value.dropLast(1) + symbol
-        }
+            val lastChar = expression.value.lastOrNull().toString()
+            val validSymbols = setOf("%", "/", "*", "-", "+", "^", "√")
+            if (lastChar !in validSymbols) {
+                expression.value += symbol
+            } else if (lastChar != symbol) {
+                expression.value = expression.value.dropLast(1) + symbol
+            }
+
     }
 
     fun equal(
         expression: MutableState<String>,
-        pastScreen: MutableState<String>
+        pastExpression: MutableList<String>
     ) {
-        evaluateExpression(expression)
-        Log.d("Expression is ",expression.value)
+        val result = evaluateExpression(expression)
+        Log.d("Expression is ", expression.value)
+        pastExpression += "${expression.value}\n"
+        expression.value = ""
     }
 
-    private fun evaluateExpression(expression: MutableState<String>) {
+    private fun evaluateExpression(
+        expression: MutableState<String>
+    ) {
         val operators = Stack<Char>()
         val numbers = Stack<Double>()
         val precedence = mapOf('+' to 1, '-' to 1, '*' to 2, '/' to 2, '^' to 3, '√' to 3)
@@ -101,7 +106,7 @@ class Functions {
                     val operator = operators.pop()
                     if (operator == '√') {
                         val operand = numbers.pop()
-                        val result = Math.sqrt(operand)
+                        val result = sqrt(operand)
                         numbers.push(result)
                     } else {
                         val secondOperand = numbers.pop()
@@ -122,7 +127,7 @@ class Functions {
             val operator = operators.pop()
             if (operator == '√') {
                 val operand = numbers.pop()
-                val result = Math.sqrt(operand)
+                val result = sqrt(operand)
                 numbers.push(result)
             } else {
                 val secondOperand = numbers.pop()

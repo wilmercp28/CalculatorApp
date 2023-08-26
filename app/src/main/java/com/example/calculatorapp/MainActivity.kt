@@ -56,9 +56,10 @@ fun MainScreen(functions: Functions = Functions()) {
     val buttonsSeparation = 10.dp
     val screenSize = 100.dp
     val buttonsSize = 200.dp
+    val df = DecimalFormat("#.##")
+    val parenthesisResult = rememberSaveable { mutableStateOf("") }
     val currentExpression = rememberSaveable { mutableStateOf("") }
     val pastExpression: MutableList<String> by rememberSaveable { mutableStateOf(mutableListOf()) }
-    val df = DecimalFormat("#.##")
     Column(
         modifier = Modifier
             .fillMaxSize(),
@@ -105,7 +106,8 @@ fun MainScreen(functions: Functions = Functions()) {
                         buttonsSize,
                         functions,
                         pastExpression,
-                        df
+                        df,
+                        parenthesisResult
                     )
                     Spacer(modifier = Modifier.size(buttonsSeparation))
                 }
@@ -122,7 +124,8 @@ fun KeyPadButtons(
     buttonsSize: Dp,
     functions: Functions,
     pastExpression: MutableList<String>,
-    df: DecimalFormat
+    df: DecimalFormat,
+    parenthesisResult: MutableState<String>
 ){
     Box(
         modifier = Modifier
@@ -139,10 +142,10 @@ fun KeyPadButtons(
                     functions.backSpace(calculatorScreenText)
                 }
                 if (symbol == "()") {
-                    functions.parenthesis(calculatorScreenText)
+                    functions.parenthesisHandling(calculatorScreenText)
                 }
                 if (symbol == "=") {
-                    functions.equal(calculatorScreenText, pastExpression,df)
+                    functions.equal(calculatorScreenText, pastExpression,df, parenthesisResult)
                 }
                 if (symbol == "AC") {
                     calculatorScreenText.value = ""

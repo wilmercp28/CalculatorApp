@@ -11,16 +11,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -30,14 +26,13 @@ import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.text.isDigitsOnly
 import com.example.calculatorapp.ui.theme.CalculatorAppTheme
+import java.text.DecimalFormat
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,10 +54,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(functions: Functions = Functions()) {
     val buttonsSeparation = 10.dp
-    val screenSize = 200.dp
+    val screenSize = 100.dp
     val buttonsSize = 200.dp
     val currentExpression = rememberSaveable { mutableStateOf("") }
     val pastExpression: MutableList<String> by rememberSaveable { mutableStateOf(mutableListOf()) }
+    val df = DecimalFormat("#.##")
     Column(
         modifier = Modifier
             .fillMaxSize(),
@@ -70,20 +66,16 @@ fun MainScreen(functions: Functions = Functions()) {
         verticalArrangement = Arrangement.spacedBy(buttonsSeparation),
     ) {
         Spacer(modifier = Modifier.size(100.dp))
-        TextField(
-            value = "${pastExpression.joinToString("")}\n${currentExpression.value}",
-            onValueChange = { newValue ->
-                currentExpression.value = newValue
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(screenSize)
-                .padding(20.dp),
-            readOnly = true,
-            textStyle = TextStyle(
-                fontSize = 10.sp,
-                textAlign = TextAlign.End,
+        Column {
+            Text(
+                text = pastExpression.joinToString("\n"),
+                textAlign = TextAlign.End
             )
+        }
+        Text(
+            text = currentExpression.value,
+            textAlign = TextAlign.End
+
         )
         // Calculator Layout
         val buttonSymbols = listOf(
@@ -112,7 +104,8 @@ fun MainScreen(functions: Functions = Functions()) {
                         currentExpression,
                         buttonsSize,
                         functions,
-                        pastExpression
+                        pastExpression,
+                        df
                     )
                     Spacer(modifier = Modifier.size(buttonsSeparation))
                 }
@@ -120,6 +113,7 @@ fun MainScreen(functions: Functions = Functions()) {
         }
     }
 }
+
 @Composable
 fun KeyPadButtons(
     symbol: String,
@@ -127,7 +121,8 @@ fun KeyPadButtons(
     calculatorScreenText: MutableState<String>,
     buttonsSize: Dp,
     functions: Functions,
-    pastExpression: MutableList<String>
+    pastExpression: MutableList<String>,
+    df: DecimalFormat
 ){
     Box(
         modifier = Modifier
@@ -147,7 +142,7 @@ fun KeyPadButtons(
                     functions.parenthesis(calculatorScreenText)
                 }
                 if (symbol == "=") {
-                    functions.equal(calculatorScreenText,pastExpression)
+                    functions.equal(calculatorScreenText, pastExpression,df)
                 }
                 if (symbol == "AC") {
                     calculatorScreenText.value = ""
@@ -162,6 +157,7 @@ fun KeyPadButtons(
         )
     }
 }
+
 
 @Preview
 @Composable

@@ -2,6 +2,8 @@ package com.example.calculatorapp
 
 import android.util.Log
 import androidx.compose.runtime.MutableState
+import java.text.DecimalFormat
+import java.text.Format
 import java.util.Stack
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -41,7 +43,7 @@ class Functions {
     ){
             val lastChar = expression.value.lastOrNull().toString()
             val validSymbols = setOf("%", "/", "*", "-", "+", "^", "√")
-            if (lastChar !in validSymbols) {
+            if (lastChar !in validSymbols || symbol == "√" && lastChar != "√" || lastChar != "%") {
                 expression.value += symbol
             } else if (lastChar != symbol) {
                 expression.value = expression.value.dropLast(1) + symbol
@@ -51,16 +53,18 @@ class Functions {
 
     fun equal(
         expression: MutableState<String>,
-        pastExpression: MutableList<String>
+        pastExpression: MutableList<String>,
+        df: DecimalFormat
     ) {
-        val result = evaluateExpression(expression)
+        evaluateExpression(expression,df)
         Log.d("Expression is ", expression.value)
-        pastExpression += "${expression.value}\n"
+        pastExpression += expression.value
         expression.value = ""
     }
 
     private fun evaluateExpression(
-        expression: MutableState<String>
+        expression: MutableState<String>,
+        df: DecimalFormat
     ) {
         val operators = Stack<Char>()
         val numbers = Stack<Double>()
@@ -97,6 +101,14 @@ class Functions {
                 if (operators.isNotEmpty() && operators.peek() == '(') {
                     operators.pop()
                 }
+            } else if (char == '%') {
+                if (currentNumber.isNotEmpty()) {
+                    numbers.push(currentNumber.toDouble())
+                    currentNumber = ""
+                }
+                val operand = numbers.pop()
+                val percentValue = operand / 100.0
+                numbers.push(percentValue)
             } else {
                 if (currentNumber.isNotEmpty()) {
                     numbers.push(currentNumber.toDouble())
@@ -136,7 +148,10 @@ class Functions {
                 numbers.push(result)
             }
         }
-        expression.value = numbers.pop().toString()
+        expression.value = decimalisation(numbers.pop(),df)
+    }
+    fun decimalisation(value: Double,df: DecimalFormat): String{
+        return df.format(value)
     }
     private fun performOperation(operator: Char, firstOperand: Double, secondOperand: Double): Double {
         return when (operator) {

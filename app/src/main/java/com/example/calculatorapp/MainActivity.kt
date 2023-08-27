@@ -22,6 +22,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
@@ -67,17 +68,22 @@ fun MainScreen(functions: Functions = Functions()) {
         verticalArrangement = Arrangement.spacedBy(buttonsSeparation),
     ) {
         Spacer(modifier = Modifier.size(100.dp))
-        Column {
+        Column(
+            modifier = Modifier,
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.Center
+        ) {
             Text(
                 text = pastExpression.joinToString("\n"),
                 textAlign = TextAlign.End
             )
-        }
-        Text(
-            text = currentExpression.value,
-            textAlign = TextAlign.End
+            Text(
+                text = currentExpression.value,
+                textAlign = TextAlign.End,
 
-        )
+
+            )
+        }
         // Calculator Layout
         val buttonSymbols = listOf(
             "AC", "%","M-", "M+",
@@ -145,7 +151,7 @@ fun KeyPadButtons(
                     functions.parenthesisHandling(calculatorScreenText)
                 }
                 if (symbol == "=") {
-                    functions.equal(calculatorScreenText, pastExpression,df, parenthesisResult)
+                    functions.equal(calculatorScreenText, pastExpression,df)
                 }
                 if (symbol == "AC") {
                     calculatorScreenText.value = ""

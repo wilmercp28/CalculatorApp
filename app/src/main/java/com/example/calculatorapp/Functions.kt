@@ -1,11 +1,9 @@
 package com.example.calculatorapp
 
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import kotlinx.coroutines.delay
 import java.text.DecimalFormat
-import kotlin.concurrent.thread
-import kotlin.math.exp
 import kotlin.math.pow
 
 class Functions {
@@ -17,25 +15,21 @@ class Functions {
         }
     }
     fun parenthesisHandling(
-        expression: MutableState<String>
+        expression: MutableState<String>,
+        symbol: String
     ) {
-        var openParenthesis = false
         if (expression.value.isNotEmpty()) {
-            for (char in expression.value) {
-                if (char == '(') {
-                    openParenthesis = true
-                }
-                if (char == ')') {
-                    openParenthesis = false
+            if (symbol == ")") {
+                expression.value += symbol
+            } else {
+                if (expression.value.last().isDigit() || expression.value.last() == ')') {
+                    expression.value += "*$symbol"
+                } else {
+                    expression.value += symbol
                 }
             }
-        }
-        if (openParenthesis) {
-            expression.value += ")"
-        } else if (expression.value.isNotEmpty() && expression.value.last().isDigit()) {
-            expression.value += "*("
         } else {
-            expression.value += "("
+            expression.value += symbol
         }
     }
     //check if the last char is a symbol
@@ -74,8 +68,10 @@ class Functions {
         while (expression.value.contains('(')) {
             parenthesis(expression)
         }
-        if (expression.value.contains('^')){
+        if (expression.value.contains('^')) {
             exponentiation(expression)
+        }else if(expression.value.contains('%')){
+            percentage(expression)
         } else if (expression.value.contains('/') || expression.value.contains('*')) {
             multiplicationAndDivision(expression)
         } else if (expression.value.contains('+') || expression.value.contains('-')) {
@@ -99,6 +95,23 @@ class Functions {
             }
         }
         expression.value = updatedContent
+    }
+
+    private fun percentage(
+        expression: MutableState<String>
+    ){
+        val pattern = Regex("\\d+(?:\\.\\d+)?[+\\-*/]\\d+(?:\\.\\d+)?[%]")
+        val match = pattern.find(expression.value)
+        var updatedExpression = expression.value
+        val operation = match!!.value
+        Log.d("operation",operation)
+        val parts = operation.split("*")
+        val number = parts[0].toDouble()
+        val percentage = parts[1].removeSuffix("%").toDouble()
+        val result = ((number * percentage) / 100).toString()
+        updatedExpression = updatedExpression.replaceFirst(operation,result)
+        expression.value = updatedExpression
+        evaluateExpression(expression)
     }
     private fun exponentiation(
         expression: MutableState<String>

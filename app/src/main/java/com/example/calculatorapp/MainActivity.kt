@@ -11,7 +11,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -50,7 +54,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(functions: Functions = Functions()) {
@@ -58,7 +61,6 @@ fun MainScreen(functions: Functions = Functions()) {
     val screenSize = 100.dp
     val buttonsSize = 200.dp
     val df = DecimalFormat("#.##")
-    val parenthesisResult = rememberSaveable { mutableStateOf("") }
     val currentExpression = rememberSaveable { mutableStateOf("") }
     val pastExpression: MutableList<String> by rememberSaveable { mutableStateOf(mutableListOf()) }
     Column(
@@ -69,7 +71,10 @@ fun MainScreen(functions: Functions = Functions()) {
     ) {
         Spacer(modifier = Modifier.size(100.dp))
         Column(
-            modifier = Modifier,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(screenSize)
+                .padding(5.dp),
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.Center
         ) {
@@ -80,8 +85,6 @@ fun MainScreen(functions: Functions = Functions()) {
             Text(
                 text = currentExpression.value,
                 textAlign = TextAlign.End,
-
-
             )
         }
         // Calculator Layout
@@ -112,8 +115,7 @@ fun MainScreen(functions: Functions = Functions()) {
                         buttonsSize,
                         functions,
                         pastExpression,
-                        df,
-                        parenthesisResult
+                        df
                     )
                     Spacer(modifier = Modifier.size(buttonsSeparation))
                 }
@@ -121,7 +123,6 @@ fun MainScreen(functions: Functions = Functions()) {
         }
     }
 }
-
 @Composable
 fun KeyPadButtons(
     symbol: String,
@@ -130,8 +131,7 @@ fun KeyPadButtons(
     buttonsSize: Dp,
     functions: Functions,
     pastExpression: MutableList<String>,
-    df: DecimalFormat,
-    parenthesisResult: MutableState<String>
+    df: DecimalFormat
 ){
     Box(
         modifier = Modifier
@@ -166,8 +166,6 @@ fun KeyPadButtons(
         )
     }
 }
-
-
 @Preview
 @Composable
 fun GreetingPreview() {

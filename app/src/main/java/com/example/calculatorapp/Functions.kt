@@ -2,12 +2,13 @@ package com.example.calculatorapp
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.delay
 import java.text.DecimalFormat
+import kotlin.concurrent.thread
 import kotlin.math.exp
 import kotlin.math.pow
 
 class Functions {
-
     fun backSpace(
         text: MutableState<String>
     ) {
@@ -15,7 +16,6 @@ class Functions {
             text.value = text.value.removeSuffix(text.value.last().toString())
         }
     }
-
     fun parenthesisHandling(
         expression: MutableState<String>
     ) {
@@ -38,7 +38,6 @@ class Functions {
             expression.value += "("
         }
     }
-
     //check if the last char is a symbol
     //avoid multiple signs
     fun signsHandling(
@@ -52,9 +51,7 @@ class Functions {
         } else if (lastChar != symbol) {
             expression.value = expression.value.dropLast(1) + symbol
         }
-
     }
-
     fun equal(
         expression: MutableState<String>,
         pastExpression: MutableList<String>,
@@ -79,14 +76,12 @@ class Functions {
         }
         if (expression.value.contains('^')){
             exponentiation(expression)
-        }
-        else if (expression.value.contains('/') || expression.value.contains('*')) {
+        } else if (expression.value.contains('/') || expression.value.contains('*')) {
             multiplicationAndDivision(expression)
         } else if (expression.value.contains('+') || expression.value.contains('-')) {
             additionAndSubtraction(expression)
         }
     }
-
     private fun parenthesis(
         expression: MutableState<String>
     ) {
@@ -120,7 +115,6 @@ class Functions {
         expression.value = updatedExpression
         evaluateExpression(expression)
     }
-
     private fun multiplicationAndDivision(
         expression: MutableState<String>
     ) {
@@ -140,7 +134,6 @@ class Functions {
         expression.value = updatedExpression
         evaluateExpression(expression)
     }
-
     private fun additionAndSubtraction(
         expression: MutableState<String>
     ) {

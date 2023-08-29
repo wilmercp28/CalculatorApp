@@ -5,6 +5,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import java.text.DecimalFormat
 import kotlin.math.pow
+import kotlin.math.sqrt
 
 class Functions {
     fun backSpace(
@@ -52,7 +53,10 @@ class Functions {
         df: DecimalFormat
     ) {
         if (expression.value.isNotEmpty()) {
-            if (!expression.value.first().isDigit() && expression.value.first() != '(') {
+            if (!expression.value.first().isDigit()
+                && expression.value.first() != '('
+                && expression.value.first() != '√'
+                && pastExpression.isNotEmpty()) {
                 val lastIndex = pastExpression.lastIndex
                 expression.value = pastExpression[lastIndex] + expression.value
                 evaluateExpression(expression)
@@ -70,6 +74,8 @@ class Functions {
         }
         if (expression.value.contains('^')) {
             exponentiation(expression)
+        }else if (expression.value.contains('√')){
+            squareRoot(expression)
         }else if(expression.value.contains('%')){
             percentage(expression)
         } else if (expression.value.contains('/') || expression.value.contains('*')) {
@@ -96,6 +102,22 @@ class Functions {
         }
         expression.value = updatedContent
     }
+
+    private fun squareRoot(
+        expression: MutableState<String>
+    ){
+        val pattern = Regex("√(\\d+(\\.\\d+)?)")
+        val match = pattern.find(expression.value)
+        Log.d("Match",match!!.value)
+        val operation = match!!.value
+        val number = operation.removePrefix("√").toDouble()
+        val result = sqrt(number).toString()
+        val updatedExpression = expression.value.replaceFirst(operation, result)
+        expression.value = updatedExpression
+        evaluateExpression(expression)
+
+    }
+
 
     private fun percentage(
         expression: MutableState<String>
@@ -150,20 +172,29 @@ class Functions {
     private fun additionAndSubtraction(
         expression: MutableState<String>
     ) {
-        val pattern = Regex("\\d+(?:\\.\\d+)?[+\\-]\\d+(?:\\.\\d+)?")
+        val pattern = Regex("-*\\d+(?:\\.\\d+)?[+\\-]\\d+(?:\\.\\d+)?")
         val match = pattern.find(expression.value)
         var updatedExpression = expression.value
-        val operation = match!!.value
-        val parts = operation.split(Regex("[+-]"))
-        val leftOperand = parts[0].toDouble()
-        val rightOperand = parts[1].toDouble()
-        val result = when {
-            operation.contains("+") -> (leftOperand + rightOperand).toString()
-            else -> (leftOperand - rightOperand).toString()
+        if (match != null) {
+            val operation = match.value
+            Log.d("Operation",operation)
+            val parts = operation.split(Regex("[+-]")).toMutableList()
+            if (parts.size == 3){
+                parts[0] = "-${parts[0]}${parts[1]}"
+                parts[1] = parts[2]
+            }
+            val leftOperand = parts[0].toDouble()
+            val rightOperand = parts[1].toDouble()
+            Log.d("Parts",parts.toString())
+            val result = when {
+                operation.contains("+") -> (leftOperand + rightOperand)
+                else -> (leftOperand - rightOperand)
+            }
+            Log.d("Results", result.toString())
+            updatedExpression = updatedExpression.replaceFirst(operation, result.toString())
+            expression.value = updatedExpression
+            evaluateExpression(expression)
         }
-        updatedExpression = updatedExpression.replaceFirst(operation, result)
-        expression.value = updatedExpression
-        evaluateExpression(expression)
     }
 }
 

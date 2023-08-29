@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -76,28 +77,30 @@ fun MainScreen(functions: Functions = Functions()) {
         horizontalAlignment = CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(buttonsSeparation),
     ) {
-        Spacer(modifier = Modifier.size(100.dp))
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(screenSize)
-                    .background(MaterialTheme.colorScheme.primary),
-                horizontalAlignment = CenterHorizontally,
-                verticalArrangement = Arrangement.Bottom
-            ) {
-                Text(
-                    text = pastExpression.joinToString("\n"),
-                    fontSize = fontSize,
-                )
-                Divider()
-                Text(
-                    text = currentExpression.value,
-                    fontSize = fontSize,
-                )
-            }
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .height(200.dp)
+                .background(MaterialTheme.colorScheme.primary),
+            verticalArrangement = Arrangement.SpaceEvenly,
+            horizontalAlignment = CenterHorizontally
+        ) {
+            Text(
+                text = pastExpression.joinToString("\n"),
+                fontSize = fontSize,
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+            )
+            Text(
+                text = currentExpression.value,
+                fontSize = fontSize,
+                modifier = Modifier
+                    .weight(1f)
+            )
+        }
+        Column(
+            modifier = Modifier
                 .padding(10.dp),
             horizontalAlignment = CenterHorizontally,
             verticalArrangement = Arrangement.Bottom

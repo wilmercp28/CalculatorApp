@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import java.text.DecimalFormat
+import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -50,39 +51,41 @@ class Functions {
     fun equal(
         expression: MutableState<String>,
         pastExpression: MutableList<String>,
-        df: DecimalFormat
+        df: DecimalFormat,
+        result: MutableState<String>
     ) {
         if (expression.value.isNotEmpty()) {
-            if (!expression.value.first().isDigit()
-                && expression.value.first() != '('
-                && expression.value.first() != '√'
-                && pastExpression.isNotEmpty()) {
-                val lastIndex = pastExpression.lastIndex
-                expression.value = pastExpression[lastIndex] + expression.value
-                evaluateExpression(expression)
-            }
             evaluateExpression(expression)
-            pastExpression += df.format(expression.value.toDouble()).toString()
+            pastExpression += if (expression.value == "Error: Division by zero"){
+                expression.value
+            } else {
+                try {
+                    df.format(expression.value.toDouble()).toString()
+                } catch (e: NumberFormatException) {
+                    "Invalid Number / Operation"
+                }
+            }
+            result.value = expression.value
             expression.value = ""
         }
     }
     private fun evaluateExpression(
         expression: MutableState<String>
     ) {
-        while (expression.value.contains('(')) {
-            parenthesis(expression)
-        }
-        if (expression.value.contains('^')) {
-            exponentiation(expression)
-        }else if (expression.value.contains('√')){
-            squareRoot(expression)
-        }else if(expression.value.contains('%')){
-            percentage(expression)
-        } else if (expression.value.contains('/') || expression.value.contains('*')) {
-            multiplicationAndDivision(expression)
-        } else if (expression.value.contains('+') || expression.value.contains('-')) {
-            additionAndSubtraction(expression)
-        }
+            while (expression.value.contains('(')) {
+                parenthesis(expression)
+            }
+            if (expression.value.contains('^')) {
+                exponentiation(expression)
+            }else if (expression.value.contains('√')){
+                squareRoot(expression)
+            }else if(expression.value.contains('%')){
+                percentage(expression)
+            } else if (expression.value.contains('/') || expression.value.contains('*')) {
+                multiplicationAndDivision(expression)
+            } else if (expression.value.contains('+') || expression.value.contains('-')) {
+                additionAndSubtraction(expression)
+            }
     }
     private fun parenthesis(
         expression: MutableState<String>
@@ -106,12 +109,12 @@ class Functions {
     private fun squareRoot(
         expression: MutableState<String>
     ){
-        val pattern = Regex("√(\\d+(\\.\\d+)?)")
+        val pattern = Regex("√(-*\\d+(\\.\\d+)?)")
         val match = pattern.find(expression.value)
         Log.d("Match",match!!.value)
         val operation = match!!.value
         val number = operation.removePrefix("√").toDouble()
-        val result = sqrt(number).toString()
+        val result = sqrt(abs( number)).toString()
         val updatedExpression = expression.value.replaceFirst(operation, result)
         expression.value = updatedExpression
         evaluateExpression(expression)
@@ -130,7 +133,7 @@ class Functions {
         val parts = operation.split("*")
         val number = parts[0].toDouble()
         val percentage = parts[1].removeSuffix("%").toDouble()
-        val result = ((number * percentage) / 100).toString()
+        val result = ((abs( number) * percentage) / 100).toString()
         updatedExpression = updatedExpression.replaceFirst(operation,result)
         expression.value = updatedExpression
         evaluateExpression(expression)
@@ -138,7 +141,7 @@ class Functions {
     private fun exponentiation(
         expression: MutableState<String>
     ) {
-        val pattern = Regex("\\d+(?:\\.\\d+)?\\^\\d+(?:\\.\\d+)?")
+        val pattern = Regex("-*\\d+(?:\\.\\d+)?\\^-*\\d+(?:\\.\\d+)?")
         val match = pattern.find(expression.value)
         var updatedExpression = expression.value
         val operation = match!!.value
@@ -153,11 +156,13 @@ class Functions {
     private fun multiplicationAndDivision(
         expression: MutableState<String>
     ) {
-        val pattern = Regex("\\d+(?:\\.\\d+)?[*/]\\d+(?:\\.\\d+)?")
+        val pattern = Regex("-*\\d+(?:\\.\\d+)?[*/]-*\\d+(?:\\.\\d+)?")
         val match = pattern.find(expression.value)
         var updatedExpression = expression.value
         val operation = match!!.value
+        Log.d("Match",operation)
         val parts = operation.split(Regex("[*/]"))
+        Log.d("Parts", parts.toString())
         val leftOperand = parts[0].toDouble()
         val rightOperand = parts[1].toDouble()
         val result = when {
@@ -165,6 +170,7 @@ class Functions {
             rightOperand != 0.0 -> (leftOperand / rightOperand).toString()
             else -> "Error: Division by zero"
         }
+        Log.d("Results",result)
         updatedExpression = updatedExpression.replaceFirst(operation, result)
         expression.value = updatedExpression
         evaluateExpression(expression)

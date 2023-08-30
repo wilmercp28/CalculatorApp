@@ -5,35 +5,32 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.ScrollableState
-import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
+import androidx.compose.ui.Alignment.Companion.CenterEnd
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -70,6 +67,7 @@ fun MainScreen(functions: Functions = Functions()) {
     val df = DecimalFormat("#.##")
     val fontSize = 20.sp
     val currentExpression = rememberSaveable { mutableStateOf("") }
+    val results = rememberSaveable { mutableStateOf("") }
     val pastExpression: MutableList<String> by rememberSaveable { mutableStateOf(mutableListOf()) }
     Column(
         modifier = Modifier
@@ -77,28 +75,8 @@ fun MainScreen(functions: Functions = Functions()) {
         horizontalAlignment = CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(buttonsSeparation),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .background(MaterialTheme.colorScheme.primary),
-            verticalArrangement = Arrangement.SpaceEvenly,
-            horizontalAlignment = CenterHorizontally
-        ) {
-            Text(
-                text = pastExpression.joinToString("\n"),
-                fontSize = fontSize,
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-            )
-            Text(
-                text = currentExpression.value,
-                fontSize = fontSize,
-                modifier = Modifier
-                    .weight(1f)
-            )
-        }
+        CalculatorScreen(currentExpression,pastExpression,results)
+
         Column(
             modifier = Modifier
                 .padding(10.dp),
@@ -138,7 +116,8 @@ fun MainScreen(functions: Functions = Functions()) {
                             buttonsSize,
                             functions,
                             pastExpression,
-                            df
+                            df,
+                            results
                         )
                         Spacer(modifier = Modifier.size(buttonsSeparation))
                     }
@@ -148,6 +127,30 @@ fun MainScreen(functions: Functions = Functions()) {
     }
 }
 @Composable
+fun CalculatorScreen(
+    expression: MutableState<String>,
+    pastExpression: MutableList<String>,
+    results: MutableState<String>
+){
+    Column() {
+        Box(
+            modifier = Modifier
+                .padding(20.dp)
+                .background(MaterialTheme.colorScheme.primary)
+                .fillMaxWidth(),
+            contentAlignment = CenterEnd
+        ){
+            Text(
+                text = expression.value,
+                fontSize = 30.sp
+            )
+            DropdownMenuItem(text = { /*TODO*/ }, onClick = { /*TODO*/ })
+        }
+
+    }
+
+}
+@Composable
 fun KeyPadButtons(
     symbol: String,
     backgroundColor: Color,
@@ -155,7 +158,8 @@ fun KeyPadButtons(
     buttonsSize: Dp,
     functions: Functions,
     pastExpression: MutableList<String>,
-    df: DecimalFormat
+    df: DecimalFormat,
+    result: MutableState<String>
 ){
     Box(
         modifier = Modifier
@@ -175,7 +179,7 @@ fun KeyPadButtons(
                     functions.parenthesisHandling(calculatorScreenText, symbol)
                 }
                 if (symbol == "=") {
-                    functions.equal(calculatorScreenText, pastExpression, df)
+                    functions.equal(calculatorScreenText, pastExpression, df, result)
                 }
                 if (symbol == "AC") {
                     calculatorScreenText.value = ""

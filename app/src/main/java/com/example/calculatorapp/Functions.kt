@@ -1,5 +1,6 @@
 package com.example.calculatorapp
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -60,15 +61,19 @@ class Functions {
         expression: MutableState<String>,
         pastExpression: MutableList<String>,
         df: DecimalFormat,
-        result: MutableState<String>
+        result: MutableState<String>,
+        context: Context
     ) {
+        val saveData = SaveData()
         val pastOperation = expression.value
         if (expression.value.isNotEmpty()) {
             evaluateExpression(expression)
             try {
                 val formattedResult = df.format(expression.value.toDouble()).toString()
                 result.value = "= $formattedResult"
-                pastExpression += "${time()}\n$pastOperation = $formattedResult"
+                val newEntry = "${time()}\n$pastOperation = $formattedResult"
+                pastExpression.add(newEntry)
+                saveData.saveListToFile("Past_Expression_History", pastExpression, context)
                 expression.value = ""
             } catch (e: NumberFormatException){
                 expression.value = ""

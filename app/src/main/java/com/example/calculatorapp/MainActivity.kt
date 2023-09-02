@@ -1,6 +1,9 @@
 package com.example.calculatorapp
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -24,6 +27,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -42,8 +47,10 @@ import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterEnd
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.TopCenter
+import androidx.compose.ui.Alignment.Companion.TopStart
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -71,14 +78,15 @@ class MainActivity : ComponentActivity() {
 }
 @Composable
 fun MainScreen(functions: Functions = Functions()) {
+    val context = LocalContext.current
+    var isDrawerVisible by remember { mutableStateOf(false) }
+    val saveData = SaveData()
     val buttonsSeparation = 5.dp
-    val screenSize = 200.dp
     val buttonsSize = 200.dp
     val df = DecimalFormat("#.##")
-    val fontSize = 20.sp
     val currentExpression = rememberSaveable { mutableStateOf("") }
     val results = rememberSaveable { mutableStateOf("") }
-    val pastExpression: MutableList<String> by rememberSaveable { mutableStateOf(mutableListOf()) }
+    var pastExpression by remember { mutableStateOf(saveData.loadListFromFile("Past_Expression_History", context)) }
     Box(
         modifier = Modifier,
         contentAlignment = Center
@@ -123,7 +131,8 @@ fun MainScreen(functions: Functions = Functions()) {
                             functions,
                             pastExpression,
                             df,
-                            results
+                            results,
+                            context
                         )
                         Spacer(modifier = Modifier.size(buttonsSeparation))
                     }
@@ -136,7 +145,18 @@ fun MainScreen(functions: Functions = Functions()) {
             .fillMaxSize(),
         contentAlignment = TopCenter
     ) {
-        CalculatorScreen(currentExpression, pastExpression, results)
+        CalculatorScreen(currentExpression, pastExpression, results,context)
+    }
+    Box(
+        modifier = Modifier,
+        contentAlignment = TopStart){
+        IconButton(onClick = {
+            isDrawerVisible = !isDrawerVisible
+        }) {
+            Icon(imageVector = R.drawable.settingsicon,"Settings")
+
+        }
+        
     }
 }
 
@@ -144,8 +164,10 @@ fun MainScreen(functions: Functions = Functions()) {
 fun CalculatorScreen(
     expression: MutableState<String>,
     pastExpression: MutableList<String>,
-    results: MutableState<String>
+    results: MutableState<String>,
+    context: Context
 ){
+    val saveData = SaveData()
     Column(
         modifier = Modifier
             .fillMaxWidth(),
@@ -194,9 +216,17 @@ fun CalculatorScreen(
                                 expression.value = item.substringAfter('=')
                                 expanded = false
                             },
-
-
                         )
+                    }
+                    item {
+                        Text(
+                            modifier = Modifier
+                                .clickable {
+                                    pastExpression.clear()
+                                    saveData.saveListToFile("Past_Expression_History",pastExpression, context)
+                                    expanded = !expanded
+                                },
+                            text = "Clear",)
                     }
                 }
             )
@@ -212,8 +242,10 @@ fun KeyPadButtons(
     functions: Functions,
     pastExpression: MutableList<String>,
     df: DecimalFormat,
-    result: MutableState<String>
+    result: MutableState<String>,
+    context: Context
 ){
+    val saveReadData = SaveData()
     Box(
         modifier = Modifier
             .size(buttonsSize / 3)
@@ -232,7 +264,7 @@ fun KeyPadButtons(
                     functions.parenthesisHandling(calculatorScreenText, symbol)
                 }
                 if (symbol == "=") {
-                    functions.equal(calculatorScreenText, pastExpression, df, result)
+                    functions.equal(calculatorScreenText, pastExpression, df, result, context)
                 }
                 if (symbol == "AC") {
                     calculatorScreenText.value = ""

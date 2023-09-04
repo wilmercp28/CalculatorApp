@@ -1,18 +1,20 @@
 package com.example.calculatorapp
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import org.json.JSONObject
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
-class SaveData (){
-
-     fun saveDataToFile(
+class SaveData (
+    private val context: Context
+        ){
+     private fun saveDataToFile(
         data: String,
         fileName: String,
-        context: Context
+
     ){
         val file = File(context.filesDir,fileName)
         try {
@@ -23,9 +25,8 @@ class SaveData (){
             e.printStackTrace()
         }
     }
-    fun readDataFromFile(
-        fileName: String,
-        context: Context
+    private fun readDataFromFile(
+        fileName: String
     )
     : String {
         val file = File(context.filesDir, fileName)
@@ -43,17 +44,27 @@ class SaveData (){
         }
         return stringBuilder.toString()
     }
-    fun saveListToFile(fileName: String, list: List<String>, context: Context) {
+    fun saveListToFile(fileName: String, list: List<String>) {
         val data = list.joinToString("\n").trim()
-        saveDataToFile(data, fileName, context)
+        saveDataToFile(data, fileName)
     }
     fun loadListFromFile(fileName: String, context: Context): MutableList<String> {
-        val data = readDataFromFile(fileName, context)
-        Log.d("Data",data)
+        val data = readDataFromFile(fileName)
         return if (data.isNotBlank()) {
             data.split("\n").toMutableList()
         } else {
             mutableListOf()
         }
     }
-}
+
+    private val sharedPreferences: SharedPreferences =
+            context.getSharedPreferences("MyPrefs", Context.MODE_PRIVATE)
+    fun saveSettingsData(key: String, value: String) {
+            val editor = sharedPreferences.edit()
+            editor.putString(key, value)
+            editor.apply()
+        }
+    fun getSettingsData(key: String, defaultValue: String): String {
+            return sharedPreferences.getString(key, defaultValue) ?: defaultValue
+        }
+    }

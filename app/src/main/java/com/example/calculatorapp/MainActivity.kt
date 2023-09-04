@@ -22,10 +22,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -68,18 +68,28 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-@OptIn(ExperimentalMaterial3Api::class)
+
+
 @Composable
 fun MainScreen(functions: Functions = Functions()) {
-    val isSettingsVisible = rememberSaveable{ mutableStateOf(false) }
     val context = LocalContext.current
-    val saveData = SaveData()
+    val saveData = SaveData(context)
+    val selectedDecimal = remember { mutableStateOf(saveData.getSettingsData("DecimalPlace","0")) }
+    val isSettingsVisible = rememberSaveable{ mutableStateOf(false) }
     val buttonsSeparation = 5.dp
     val buttonsSize = 200.dp
-    val df = DecimalFormat("#.##")
     val currentExpression = rememberSaveable { mutableStateOf("") }
     val results = rememberSaveable { mutableStateOf("") }
     var pastExpression by remember { mutableStateOf(saveData.loadListFromFile("Past_Expression_History", context)) }
+    val decimalPatter = when (selectedDecimal.value) {
+        "0" -> "#"
+        "1" -> "#.#"
+        "2" -> "#.##"
+        "3" -> "#.###"
+        "4" -> "#.####"
+        else -> {"#"}
+    }
+    val df = DecimalFormat(decimalPatter)
     Box(
         modifier = Modifier,
         contentAlignment = Center
@@ -146,53 +156,84 @@ fun MainScreen(functions: Functions = Functions()) {
     {
         IconButton(
             onClick = {
-isSettingsVisible.value = !isSettingsVisible.value
+                isSettingsVisible.value = !isSettingsVisible.value
             }
         ) {
             Icon(imageVector = Icons.Default.Settings,"Settings")
         }
-        SettingsMenu(isSettingsVisible)
+        SettingsMenu(isSettingsVisible, selectedDecimal,context)
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsMenu(
-    isSettingsVisible: MutableState<Boolean>
-)
+    isSettingsVisible: MutableState<Boolean>,
+    selectedDecimal: MutableState<String>,
+    context: Context
+
+    )
 {
+    val settings: MutableList<String> = mutableListOf()
     if (isSettingsVisible.value) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(35.dp)
-                .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(20.dp)),
+                .padding(25.dp)
+                .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(20.dp)),
             verticalArrangement = Arrangement.Center
 
         ) {
-            Text(text = "Settings")
-            Text(text = "Settings")
-            Text(text = "Settings")
-            Text(text = "Settings")
-            Text(text = "Settings")
-            Text(text = "Settings")
-            Text(text = "Settings")
-
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(10.dp)
+            ) {
+               Text(text = "Decimal Places")
+                Spacer(modifier = Modifier.weight(1f))
+                DecimalPlacesButton(selectedDecimal,"0",context)
+                DecimalPlacesButton(selectedDecimal,"1",context)
+                DecimalPlacesButton(selectedDecimal,"2",context)
+                DecimalPlacesButton(selectedDecimal,"3",context)
+                DecimalPlacesButton(selectedDecimal,"4",context)
+            }
         }
     }
 
 }
 
+@Composable
+fun DecimalPlacesButton(
+    selectedDecimal: MutableState<String>,
+    decimalNumber: String,
+    context: Context
+){
+    val saveData =  SaveData(context)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        RadioButton(
+            selected = selectedDecimal.value == decimalNumber,
+            onClick = {
+                selectedDecimal.value = decimalNumber
+                saveData.saveSettingsData("DecimalPlace",decimalNumber)
+                      },
+            modifier = Modifier
+                .size(30.dp)
+        )
+        Text(text = decimalNumber)
+    }
+}
 
 
-    @Composable
+
+@Composable
 fun CalculatorScreen(
     expression: MutableState<String>,
     pastExpression: MutableList<String>,
     results: MutableState<String>,
     context: Context
 ){
-    val saveData = SaveData()
+    val saveData = SaveData(context)
     Column(
         modifier = Modifier
             .fillMaxWidth(),
@@ -248,7 +289,7 @@ fun CalculatorScreen(
                             modifier = Modifier
                                 .clickable {
                                     pastExpression.clear()
-                                    saveData.saveListToFile("Past_Expression_History",pastExpression, context)
+                                    saveData.saveListToFile("Past_Expression_History",pastExpression)
                                     expanded = !expanded
                                 },
                             text = "Clear",)

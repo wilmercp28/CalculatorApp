@@ -64,7 +64,7 @@ class Functions {
         result: MutableState<String>,
         context: Context
     ) {
-        val saveData = SaveData()
+        val saveData = SaveData(context)
         val pastOperation = expression.value
         if (expression.value.isNotEmpty()) {
             evaluateExpression(expression)
@@ -73,7 +73,7 @@ class Functions {
                 result.value = "= $formattedResult"
                 val newEntry = "${time()}\n$pastOperation = $formattedResult"
                 pastExpression.add(newEntry)
-                saveData.saveListToFile("Past_Expression_History", pastExpression, context)
+                saveData.saveListToFile("Past_Expression_History", pastExpression)
                 expression.value = ""
             } catch (e: NumberFormatException){
                 expression.value = ""

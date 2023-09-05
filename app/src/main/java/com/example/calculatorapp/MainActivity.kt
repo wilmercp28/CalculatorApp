@@ -21,18 +21,28 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
+import androidx.compose.material3.DismissibleNavigationDrawer
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DrawerState
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -50,9 +60,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.text.isDigitsOnly
 import com.example.calculatorapp.ui.theme.CalculatorAppTheme
+import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 import kotlin.math.PI
 
+@OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,7 +74,51 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen()
+                    val context = LocalContext.current
+                    val scope = rememberCoroutineScope()
+                    val selectedItem = remember { mutableStateOf(SaveData(context).getSettingsData("Screen","0")) }
+                    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+                    ModalNavigationDrawer(
+                        drawerState = drawerState,
+                        drawerContent = {
+                            ModalDrawerSheet {
+                                Text("Calculators", modifier = Modifier.padding(16.dp))
+                                Divider()
+                                NavigationDrawerItem(
+                                    label = { Text(text = "Calculator") },
+                                    selected = selectedItem.value == "0",
+                                    onClick = {
+                                        selectedItem.value = "0"
+                                        scope.launch { drawerState.close() }
+                                        SaveData(context).saveSettingsData("Screen","0")
+                                    }
+                                )
+                                NavigationDrawerItem(
+                                    label = { Text(text = "Graphing") },
+                                    selected = selectedItem.value == "1",
+                                    onClick = {
+                                        selectedItem.value = "1"
+                                        scope.launch { drawerState.close() }
+                                        SaveData(context).saveSettingsData("Screen","1")
+                                    }
+                                )
+                                // ...other drawer items
+                            }
+                        }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize(),
+                            contentAlignment = Center
+                        ) {
+
+                            when (selectedItem.value){
+                                "0" ->  MainScreen()
+                                "1" -> MainScreenGraphing()
+                            }
+
+                        }
+                    }
                 }
             }
         }
@@ -151,8 +207,10 @@ fun MainScreen(functions: Functions = Functions()) {
         CalculatorScreen(currentExpression, pastExpression, results,context)
     }
     Box(
-        modifier = Modifier,
-        contentAlignment = TopStart)
+        modifier = Modifier
+            .fillMaxSize(),
+        contentAlignment = TopStart
+    )
     {
         IconButton(
             onClick = {

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -21,9 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
-import androidx.compose.material3.DismissibleNavigationDrawer
 import androidx.compose.material3.Divider
-import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,23 +45,21 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.TopCenter
 import androidx.compose.ui.Alignment.Companion.TopStart
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.text.isDigitsOnly
 import com.example.calculatorapp.ui.theme.CalculatorAppTheme
 import kotlinx.coroutines.launch
 import java.text.DecimalFormat
-import kotlin.math.PI
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
@@ -102,6 +99,18 @@ class MainActivity : ComponentActivity() {
                                         SaveData(context).saveSettingsData("Screen","1")
                                     }
                                 )
+                                Divider(thickness = 2.dp)
+                                Text(text = "Converter", textAlign = TextAlign.Center)
+                                Divider(thickness = 2.dp)
+                                NavigationDrawerItem(
+                                    label = { Text(text = "Length") },
+                                    selected = selectedItem.value == "2",
+                                    onClick = {
+                                        selectedItem.value = "2"
+                                        scope.launch { drawerState.close() }
+                                        SaveData(context).saveSettingsData("Screen","2")
+                                    }
+                                )
                                 // ...other drawer items
                             }
                         }
@@ -115,6 +124,7 @@ class MainActivity : ComponentActivity() {
                             when (selectedItem.value){
                                 "0" ->  MainScreen()
                                 "1" -> MainScreenGraphing()
+                                "2" -> MainLengthConverterScreen()
                             }
 
                         }
@@ -132,8 +142,8 @@ fun MainScreen(functions: Functions = Functions()) {
     val saveData = SaveData(context)
     val selectedDecimal = remember { mutableStateOf(saveData.getSettingsData("DecimalPlace","0")) }
     val isSettingsVisible = rememberSaveable{ mutableStateOf(false) }
-    val buttonsSeparation = 5.dp
-    val buttonsSize = 200.dp
+    val buttonsSeparation = 1.dp
+    val buttonsSize = 250.dp
     val currentExpression = rememberSaveable { mutableStateOf("") }
     val results = rememberSaveable { mutableStateOf("") }
     var pastExpression by remember { mutableStateOf(saveData.loadListFromFile("Past_Expression_History", context)) }
@@ -147,64 +157,62 @@ fun MainScreen(functions: Functions = Functions()) {
     }
     val df = DecimalFormat(decimalPatter)
     Box(
+        modifier = Modifier
+            .fillMaxSize(),
+        contentAlignment = BottomCenter
+    )
+    {
+    Column(
         modifier = Modifier,
-        contentAlignment = Center
     ) {
-        Column(
-            modifier = Modifier
-                .padding(10.dp),
-            horizontalAlignment = CenterHorizontally,
-            verticalArrangement = Arrangement.Bottom
-        ) {
-            // Calculator Layout
-            val buttonSymbols = listOf(
-
-                "AC", "π", "%", "√",
-                "^", "(", ")", "/",
-                "1", "2", "3", "*",
-                "4", "5", "6", "-",
-                "7", "8", "9", "+",
-                "0", ".", "<", "="
-            )
-            val rows = buttonSymbols.chunked(4)
-            for (rowSymbols in rows) {
-                Row(
-                    modifier = Modifier
-                        .padding(buttonsSeparation),
-                    verticalAlignment = Alignment.Bottom,
-                    horizontalArrangement = Arrangement.spacedBy(buttonsSeparation)
-                ) {
-                    for (symbol in rowSymbols) {
-                        val buttonsColor = if (
-                            symbol.isDigitsOnly() || symbol == "." || symbol == "<"
-                        ) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.tertiary
-                        }
-                        KeyPadButtons(
-                            symbol,
-                            buttonsColor,
-                            currentExpression,
-                            buttonsSize,
-                            functions,
-                            pastExpression,
-                            df,
-                            results,
-                            context
-                        )
-                        Spacer(modifier = Modifier.size(buttonsSeparation))
+        // Calculator Layout
+        val buttonSymbols = listOf(
+            "AC", "π", "%", "√",
+            "^", "(", ")", "/",
+            "1", "2", "3", "*",
+            "4", "5", "6", "-",
+            "7", "8", "9", "+",
+            "0", ".", "<", "="
+        )
+        val rows = buttonSymbols.chunked(4)
+        for (rowSymbols in rows) {
+            Row(
+                modifier = Modifier
+                    .padding(buttonsSeparation),
+                horizontalArrangement = Arrangement.spacedBy(buttonsSeparation)
+            ) {
+                for (symbol in rowSymbols) {
+                    val buttonsColor = if (
+                        symbol.isDigitsOnly() || symbol == "." || symbol == "<"
+                    ) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.tertiary
                     }
+                    KeyPadButtonsWithSigns(
+                        symbol,
+                        buttonsColor,
+                        currentExpression,
+                        buttonsSize,
+                        functions,
+                        pastExpression,
+                        df,
+                        results,
+                        context
+                    )
+                    Spacer(modifier = Modifier.size(buttonsSeparation))
                 }
             }
         }
     }
+}
+
     Box(
         modifier = Modifier
             .fillMaxSize(),
         contentAlignment = TopCenter
     ) {
-        CalculatorScreen(currentExpression, pastExpression, results,context)
+        CalculatorScreen(currentExpression,pastExpression, results,context)
     }
     Box(
         modifier = Modifier
@@ -294,7 +302,8 @@ fun CalculatorScreen(
     val saveData = SaveData(context)
     Column(
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .offset(y = 150.dp),
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.Center
     ) {
@@ -357,54 +366,7 @@ fun CalculatorScreen(
         }
     }
 }
-@Composable
-fun KeyPadButtons(
-    symbol: String,
-    backgroundColor: Color,
-    calculatorScreenText: MutableState<String>,
-    buttonsSize: Dp,
-    functions: Functions,
-    pastExpression: MutableList<String>,
-    df: DecimalFormat,
-    result: MutableState<String>,
-    context: Context
-){
-    Box(
-        modifier = Modifier
-            .size(buttonsSize / 3)
-            .background(backgroundColor, RoundedCornerShape(buttonsSize))
-            .clickable {
-                if (symbol in "1234567890.") {
-                    calculatorScreenText.value += symbol
-                }
-                if (symbol in "%/*-+^√") {
-                    functions.signsHandling(symbol, calculatorScreenText)
-                }
-                if (symbol == "<") {
-                    functions.backSpace(calculatorScreenText)
-                }
-                if (symbol == "(" || symbol == ")") {
-                    functions.parenthesisHandling(calculatorScreenText, symbol)
-                }
-                if (symbol == "=") {
-                    functions.equal(calculatorScreenText, pastExpression, df, result, context)
-                }
-                if (symbol == "AC") {
-                    calculatorScreenText.value = ""
-                }
-                if (symbol == "π") {
-                    calculatorScreenText.value += df.format(PI)
-                }
-            },
-        contentAlignment = Center,
-    ) {
-        Text(
-            text = symbol,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onPrimary
-        )
-    }
-}
+
 @Preview
 @Composable
 fun GreetingPreview() {

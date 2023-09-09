@@ -55,7 +55,7 @@ fun MainScreenGraphing(
     val yValues: MutableList<Double> = rememberSaveable{ mutableListOf() }
     val xValues: MutableList<Double> = remember { mutableListOf() }
     val buttonsSeparation = 5.dp
-    val buttonsSize = 200.dp
+    val buttonsSize = 250.dp
     val yVerticalStep = rememberSaveable{ mutableStateOf(1) }
     Column(
         modifier = Modifier
@@ -146,6 +146,9 @@ fun CanvasGraph(
             coordinates.clear()
             controlPoints1.clear()
             controlPoints2.clear()
+
+
+
             if (yValues.isNotEmpty() && xValues.isNotEmpty()) {
                 val maxX = xValues.maxOrNull() ?: 1.0
                 val maxY = yValues.maxOrNull() ?: 1.0
@@ -330,31 +333,5 @@ fun TextFieldGraph(
 
 }
 
-@Composable
-fun KeyPadButtonsOnlyNumbers(
-    symbol: String,
-    backgroundColor: Color,
-    buttonsSize: Dp,
-    steps: MutableState<String>
-){
-    Box(
-        modifier = Modifier
-            .size(buttonsSize / 3)
-            .background(backgroundColor, RoundedCornerShape(buttonsSize))
-            .clickable {
-                if (symbol == "<" && steps.value.isNotEmpty()) {
-                    steps.value = steps.value.substringBeforeLast(steps.value.last())
-                } else if (symbol != "<" && steps.value.length < 9) {
-                    steps.value += symbol
-                }
-            },
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = symbol,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onPrimary
-        )
-    }
-}
+
 

@@ -103,7 +103,8 @@ fun MainScreenGraphing(
                             symbol,
                             buttonsColor,
                             buttonsSize,
-                            steps
+                            steps,
+                            8
                             )
                         Spacer(modifier = Modifier.size(buttonsSeparation))
                     }

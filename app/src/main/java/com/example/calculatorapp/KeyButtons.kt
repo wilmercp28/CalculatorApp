@@ -24,18 +24,21 @@ fun KeyPadButtonsOnlyNumbers(
     symbol: String,
     backgroundColor: Color,
     buttonsSize: Dp,
-    textField: MutableState<String>
+    textField: MutableState<String>,
+    maxNumbers: Int
 ){
     Box(
         modifier = Modifier
             .size(buttonsSize / 3)
             .background(backgroundColor, RoundedCornerShape(5.dp))
             .clickable {
-                if (symbol in "1234567890") {
-                    textField.value += symbol
-                }
-                if (symbol == "." && !textField.value.contains('.')){
-                    textField.value += symbol
+                if (textField.value.length < maxNumbers) {
+                    if (symbol in "1234567890") {
+                        textField.value += symbol
+                    }
+                    if (symbol == "." && !textField.value.contains('.')) {
+                        textField.value += symbol
+                    }
                 }
                 if (symbol == "<" && textField.value.isNotEmpty()) {
                     textField.value = textField.value.substringBeforeLast(textField.value.last())
@@ -71,7 +74,7 @@ fun KeyPadButtonsWithSigns(
                 if (symbol in "1234567890") {
                     calculatorScreenText.value += symbol
                 }
-                if (symbol == "." && !calculatorScreenText.value.contains('.')){
+                if (symbol == "." && !calculatorScreenText.value.contains('.')) {
                     calculatorScreenText.value += symbol
                 }
                 if (symbol in "%/*-+^√") {

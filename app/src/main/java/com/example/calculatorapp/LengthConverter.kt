@@ -17,15 +17,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.BottomEnd
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
+import androidx.compose.ui.Alignment.Companion.Start
+import androidx.compose.ui.Alignment.Companion.TopEnd
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
@@ -34,15 +39,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.text.isDigitsOnly
+import java.security.KeyStore.TrustedCertificateEntry
 
 @Composable
 fun MainLengthConverterScreen(
 
 
 ) {
-    
-    val swapIcon: Painter = painterResource(id = R.drawable.swapicon)
+    val swapIcon: Painter = painterResource(id = R.drawable.baseline_swap_horiz_24)
     val context = LocalContext.current
+    val roundNumber = remember { mutableStateOf(SaveData(context).getSettingsData("lengthRoundingMode","True").toBoolean()) }
     val lengthTextFieldInput = remember{ mutableStateOf("") }
     val outputUnitLength = remember{ mutableStateOf(SaveData(context).getSettingsData("outputUnitLength","Meter")) }
     val inputUnitLength = remember{ mutableStateOf(SaveData(context).getSettingsData("inputUnitLength","Centimeter")) }
@@ -71,6 +77,21 @@ fun MainLengthConverterScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = CenterHorizontally
     ) {
+        Text(text = "Rounding Mode")
+            Switch(
+                checked = roundNumber.value ,
+                onCheckedChange = {
+                    roundNumber.value = it
+                    SaveData(context).saveSettingsData("lengthRoundingMode",roundNumber.value.toString())
+                    lengthTextFieldOutput.value = ConvertFunctions().lengthConverter(
+                        lengthTextFieldInput,
+                        inputUnitLength,
+                        outputUnitLength,
+                        roundNumber.value
+                    )
+                },
+                modifier = Modifier
+            )
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -83,7 +104,20 @@ fun MainLengthConverterScreen(
                 painter = swapIcon,
                 contentDescription = "SwapIcon",
             modifier = Modifier
-                .size(40.dp))
+                .size(40.dp)
+                .clickable {
+                    val unit1 = inputUnitLength.value
+                    val unit2 = outputUnitLength.value
+                    inputUnitLength.value = unit2
+                    outputUnitLength.value = unit1
+                    lengthTextFieldOutput.value = ConvertFunctions().lengthConverter(
+                        lengthTextFieldInput,
+                        inputUnitLength,
+                        outputUnitLength,
+                        roundNumber.value
+                    )
+                }
+            )
             LengthConvertorInputOutputText(lengthTextFieldOutput,outputUnitLength,lengthUnits,context,false)
         }
         Box(
@@ -91,7 +125,12 @@ fun MainLengthConverterScreen(
                 .size(70.dp)
                 .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(5.dp))
                 .clickable {
-                    lengthTextFieldOutput.value =  ConvertFunctions().lengthConverter(lengthTextFieldInput,inputUnitLength,outputUnitLength)
+                    lengthTextFieldOutput.value = ConvertFunctions().lengthConverter(
+                        lengthTextFieldInput,
+                        inputUnitLength,
+                        outputUnitLength,
+                        roundNumber.value
+                    )
                 },
             contentAlignment = Center
         ){
@@ -131,7 +170,8 @@ fun LengthConvertorInputOutputText(
         ) {
         Text(
                 text = text.value,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+            maxLines = 1
             )
             Spacer(modifier = Modifier.size(20.dp))
         Text(
